@@ -1,0 +1,2168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美妆达人 - 化妆小游戏</title>
+    <style>
+        /* ==================== 全局样式 ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'SimHei', sans-serif;
+            background: linear-gradient(135deg, #FFE4EC 0%, #FFB6C1 50%, #DDA0DD 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ==================== 顶部栏样式 ==================== */
+        .header {
+            background: linear-gradient(90deg, #FF69B4, #FF1493);
+            padding: 15px 30px;
+            box-shadow: 0 4px 15px rgba(255, 105, 180, 0.4);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 100;
+        }
+
+        .game-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            letter-spacing: 3px;
+        }
+
+        .setting-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .setting-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .setting-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* ==================== 主容器样式 ==================== */
+        .main-container {
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: calc(100vh - 160px);
+        }
+
+        /* 左侧Canvas区域 */
+        .canvas-area {
+            flex: 0 0 60%;
+            background: linear-gradient(180deg, #FFF0F5 0%, #FFE4EC 100%);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(255, 105, 180, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .canvas-area::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+            animation: sparkle 8s infinite ease-in-out;
+            pointer-events: none;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(180deg); }
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #gameCanvas {
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            cursor: crosshair;
+            transition: transform 0.3s ease;
+        }
+
+        #gameCanvas:hover {
+            transform: scale(1.01);
+        }
+
+        .canvas-tip {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            color: #FF1493;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* 右侧工具栏 */
+        .tool-panel {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(255, 105, 180, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: calc(100vh - 180px);
+            overflow-y: auto;
+        }
+
+        .tool-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .tool-panel::-webkit-scrollbar-track {
+            background: #FFE4EC;
+            border-radius: 4px;
+        }
+
+        .tool-panel::-webkit-scrollbar-thumb {
+            background: #FF69B4;
+            border-radius: 4px;
+        }
+
+        /* 化妆品分类标题 */
+        .category-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #FF1493;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #FFB6C1;
+            margin-bottom: 10px;
+        }
+
+        /* 化妆品网格 */
+        .cosmetics-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        /* 化妆品按钮 */
+        .cosmetic-btn {
+            aspect-ratio: 1;
+            border-radius: 12px;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 50px;
+            min-height: 50px;
+        }
+
+        .cosmetic-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, transparent 100%);
+        }
+
+        .cosmetic-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(255, 105, 180, 0.4);
+        }
+
+        .cosmetic-btn.selected {
+            border-color: #FF1493;
+            transform: scale(1.15);
+            box-shadow: 0 6px 20px rgba(255, 20, 147, 0.5);
+        }
+
+        .cosmetic-btn .icon {
+            position: relative;
+            z-index: 1;
+            font-size: 20px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 眼影选择模式 */
+        .eye-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .eye-btn {
+            flex: 1;
+            padding: 8px 15px;
+            border: 2px solid #FFB6C1;
+            border-radius: 10px;
+            background: white;
+            color: #FF69B4;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 13px;
+        }
+
+        .eye-btn:hover {
+            background: #FFE4EC;
+        }
+
+        .eye-btn.selected {
+            background: #FF69B4;
+            color: white;
+            border-color: #FF69B4;
+        }
+
+        /* 底部操作栏 */
+        .footer {
+            background: linear-gradient(90deg, #FF69B4, #FF1493);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            box-shadow: 0 -4px 15px rgba(255, 105, 180, 0.4);
+        }
+
+        .action-btn {
+            padding: 12px 30px;
+            border-radius: 25px;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .action-btn:active {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-undo {
+            background: linear-gradient(135deg, #E6E6FA, #DDA0DD);
+            color: #4B0082;
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #FFA07A, #FF6347);
+            color: white;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #98FB98, #32CD32);
+            color: #006400;
+        }
+
+        .btn-icon {
+            font-size: 18px;
+        }
+
+        /* 当前选中提示 */
+        .current-selection {
+            padding: 10px 15px;
+            background: linear-gradient(90deg, #FFE4EC, #FFF0F5);
+            border-radius: 15px;
+            text-align: center;
+            color: #FF1493;
+            font-size: 14px;
+            border: 2px dashed #FFB6C1;
+        }
+
+        /* 遮罩层样式 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 182, 193, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-text {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 900px) {
+            .main-container {
+                flex-direction: column;
+                padding: 10px;
+            }
+
+            .canvas-area {
+                flex: none;
+                width: 100%;
+            }
+
+            .tool-panel {
+                max-height: 400px;
+            }
+
+            .header {
+                padding: 10px 15px;
+            }
+
+            .game-title {
+                font-size: 20px;
+            }
+
+            .footer {
+                padding: 10px 15px;
+                flex-wrap: wrap;
+            }
+
+            .action-btn {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+
+        /* 化妆品图标SVG样式 */
+        .lipstick-icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(180deg, white 0%, #FFC0CB 100%);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+        }
+
+        .lipstick-icon::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 12px;
+            background: linear-gradient(180deg, #FF69B4 0%, #FF1493 100%);
+            border-radius: 50% 50% 0 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- 加载遮罩 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-text">✨ 美妆达人 正在加载中...</div>
+    </div>
+
+    <!-- 顶部栏 -->
+    <header class="header">
+        <h1 class="game-title">💄 美妆达人 🌸</h1>
+        <button class="setting-btn" id="settingBtn">⚙️</button>
+    </header>
+
+    <!-- 主容器 -->
+    <div class="main-container">
+        <!-- 左侧Canvas区域 -->
+        <div class="canvas-area">
+            <div class="canvas-wrapper">
+                <canvas id="gameCanvas" width="500" height="600"></canvas>
+            </div>
+            <div class="canvas-tip" id="canvasTip">
+                👆 请先从右侧选择化妆品，然后在角色对应区域点击或拖拽涂抹
+            </div>
+        </div>
+
+        <!-- 右侧工具栏 -->
+        <div class="tool-panel">
+            <!-- 当前选中提示 -->
+            <div class="current-selection" id="currentSelection">
+                当前：未选择任何化妆品
+            </div>
+
+            <!-- 粉底分类 -->
+            <div class="category-title">🏳️ 粉底 (Foundation)</div>
+            <div class="cosmetics-grid" id="foundationGrid">
+                <!-- 动态生成 -->
+            </div>
+
+            <!-- 腮红分类 -->
+            <div class="category-title">🌸 腮红 (Blush)</div>
+            <div class="cosmetics-grid" id="blushGrid">
+                <!-- 动态生成 -->
+            </div>
+
+            <!-- 口红分类 -->
+            <div class="category-title">💋 口红 (Lipstick)</div>
+            <div class="cosmetics-grid" id="lipstickGrid">
+                <!-- 动态生成 -->
+            </div>
+
+            <!-- 眼影分类 -->
+            <div class="category-title">👁️ 眼影 (Eyeshadow)</div>
+            <div class="cosmetics-grid" id="eyeshadowGrid">
+                <!-- 动态生成 -->
+            </div>
+            <div class="eye-options" id="eyeOptions">
+                <button class="eye-btn selected" data-eye="both">双眼</button>
+                <button class="eye-btn" data-eye="left">左眼</button>
+                <button class="eye-btn" data-eye="right">右眼</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部操作栏 -->
+    <footer class="footer">
+        <button class="action-btn btn-undo" id="undoBtn">
+            <span class="btn-icon">↩️</span>
+            撤销 (Ctrl+Z)
+        </button>
+        <button class="action-btn btn-reset" id="resetBtn">
+            <span class="btn-icon">🔄</span>
+            重置
+        </button>
+        <button class="action-btn btn-save" id="saveBtn">
+            <span class="btn-icon">💾</span>
+            保存图片
+        </button>
+    </footer>
+
+    <script>
+        /**
+         * ============================================================================
+         * 美妆达人 - 化妆小游戏
+         * 
+         * 作者：Trae AI Assistant
+         * 版本：1.0.0
+         * 日期：2026-04-23
+         * 
+         * 技术实现：
+         * - 纯HTML5 Canvas + CSS3 + JavaScript
+         * - 离屏Canvas实现图层效果
+         * - 支持鼠标和触摸事件
+         * - 支持撤销（最多5步）
+         * - 支持保存为PNG图片
+         * 
+         * 使用说明：
+         * 1. 从右侧工具栏选择化妆品
+         * 2. 在角色对应区域点击或拖拽进行涂抹
+         * 3. 粉底会改变整体肤色
+         * 4. 眼影可以选择左右眼或双眼
+         * 5. 使用底部按钮进行撤销、重置或保存
+         * ============================================================================
+         */
+
+        // ==================== 配置常量 ====================
+        
+        /**
+         * 化妆品配置对象
+         * 包含所有可用的化妆品类型、颜色和名称
+         */
+        const COSMETICS_CONFIG = {
+            // 粉底配置
+            foundation: {
+                name: '粉底',
+                icon: '🏳️',
+                colors: [
+                    { name: '瓷白', value: '#FFF5EE', opacity: 0.3 },
+                    { name: '自然', value: '#FFDAB9', opacity: 0.35 },
+                    { name: '健康小麦', value: '#DEB887', opacity: 0.4 },
+                    { name: '浅棕', value: '#D2B48C', opacity: 0.45 },
+                    { name: '古铜', value: '#CD853F', opacity: 0.5 }
+                ]
+            },
+            
+            // 腮红配置
+            blush: {
+                name: '腮红',
+                icon: '🌸',
+                colors: [
+                    { name: '蜜桃粉', value: '#FFB6C1', opacity: 0.5 },
+                    { name: '珊瑚橙', value: '#FF7F50', opacity: 0.5 },
+                    { name: '玫瑰红', value: '#FF69B4', opacity: 0.5 },
+                    { name: '裸棕', value: '#D2691E', opacity: 0.45 },
+                    { name: '气质紫', value: '#9370DB', opacity: 0.45 }
+                ]
+            },
+            
+            // 口红配置
+            lipstick: {
+                name: '口红',
+                icon: '💋',
+                colors: [
+                    { name: '正红', value: '#FF0000', opacity: 0.7 },
+                    { name: '樱花粉', value: '#FFB6C1', opacity: 0.6 },
+                    { name: '珊瑚橙', value: '#FF6347', opacity: 0.65 },
+                    { name: '豆沙裸', value: '#BC8F8F', opacity: 0.6 },
+                    { name: '复古紫', value: '#8B008B', opacity: 0.7 }
+                ]
+            },
+            
+            // 眼影配置
+            eyeshadow: {
+                name: '眼影',
+                icon: '👁️',
+                colors: [
+                    { name: '桃花粉', value: '#FF69B4', opacity: 0.5 },
+                    { name: '大地棕', value: '#8B4513', opacity: 0.5 },
+                    { name: '天空蓝', value: '#87CEEB', opacity: 0.5 },
+                    { name: '森林绿', value: '#228B22', opacity: 0.5 },
+                    { name: '神秘紫', value: '#800080', opacity: 0.5 }
+                ]
+            }
+        };
+
+        /**
+         * 角色面部区域定义
+         * 用于检测点击/涂抹的区域
+         */
+        const FACE_REGIONS = {
+            // 嘴唇区域
+            lips: {
+                x: 250,
+                y: 400,
+                width: 80,
+                height: 40,
+                type: 'lipstick'
+            },
+            // 左眼区域
+            leftEye: {
+                x: 175,
+                y: 250,
+                width: 80,
+                height: 60,
+                type: 'eyeshadow'
+            },
+            // 右眼区域
+            rightEye: {
+                x: 295,
+                y: 250,
+                width: 80,
+                height: 60,
+                type: 'eyeshadow'
+            },
+            // 左脸颊区域
+            leftCheek: {
+                x: 140,
+                y: 340,
+                width: 80,
+                height: 60,
+                type: 'blush'
+            },
+            // 右脸颊区域
+            rightCheek: {
+                x: 280,
+                y: 340,
+                width: 80,
+                height: 60,
+                type: 'blush'
+            },
+            // 整个脸部区域（粉底）
+            face: {
+                x: 150,
+                y: 150,
+                width: 200,
+                height: 300,
+                type: 'foundation'
+            }
+        };
+
+        /**
+         * 游戏配置
+         */
+        const GAME_CONFIG = {
+            canvasWidth: 500,
+            canvasHeight: 600,
+            maxUndoSteps: 5,
+            brushSize: 15,
+            smoothingFactor: 0.3
+        };
+
+        // ==================== 游戏状态管理 ====================
+        
+        /**
+         * 游戏状态对象
+         * 管理当前的游戏状态、选中的化妆品、历史记录等
+         */
+        const gameState = {
+            // 当前选中的化妆品类型 (foundation, blush, lipstick, eyeshadow)
+            currentType: null,
+            // 当前选中的颜色配置
+            currentColor: null,
+            // 眼影涂抹模式 (both, left, right)
+            eyeMode: 'both',
+            // 是否正在涂抹
+            isDrawing: false,
+            // 上一个鼠标/触摸点
+            lastPoint: null,
+            // 历史记录（用于撤销）
+            history: [],
+            // 当前粉底状态
+            foundation: null,
+            // 当前妆容数据
+            makeupData: {
+                lipstick: null,
+                blush: null,
+                eyeshadow: null,
+                foundation: null
+            }
+        };
+
+        // ==================== Canvas图层管理 ====================
+        
+        /**
+         * Canvas图层对象
+         * 使用多个离屏Canvas实现图层效果
+         */
+        const canvasLayers = {
+            // 主Canvas（显示用）
+            main: null,
+            // 主Canvas上下文
+            mainCtx: null,
+            // 基础角色图层
+            base: null,
+            baseCtx: null,
+            // 粉底图层
+            foundation: null,
+            foundationCtx: null,
+            // 腮红图层
+            blush: null,
+            blushCtx: null,
+            // 口红图层
+            lipstick: null,
+            lipstickCtx: null,
+            // 眼影图层
+            eyeshadow: null,
+            eyeshadowCtx: null,
+            // 临时绘制图层
+            temp: null,
+            tempCtx: null
+        };
+
+        // ==================== Canvas绘制函数 ====================
+        
+        /**
+         * 初始化Canvas图层
+         * 创建所有必要的Canvas元素和上下文
+         */
+        function initCanvasLayers() {
+            // 获取主Canvas
+            canvasLayers.main = document.getElementById('gameCanvas');
+            canvasLayers.mainCtx = canvasLayers.main.getContext('2d', { willReadFrequently: true });
+            
+            // 创建离屏Canvas
+            const canvasTypes = ['base', 'foundation', 'blush', 'lipstick', 'eyeshadow', 'temp'];
+            canvasTypes.forEach(type => {
+                canvasLayers[type] = document.createElement('canvas');
+                canvasLayers[type].width = GAME_CONFIG.canvasWidth;
+                canvasLayers[type].height = GAME_CONFIG.canvasHeight;
+                canvasLayers[type + 'Ctx'] = canvasLayers[type].getContext('2d', { willReadFrequently: true });
+            });
+            
+            // 绘制基础角色
+            drawBaseCharacter();
+        }
+
+        /**
+         * 绘制基础卡通角色
+         * 使用Canvas API绘制简单的卡通风格女性角色
+         */
+        function drawBaseCharacter() {
+            const ctx = canvasLayers.baseCtx;
+            const centerX = GAME_CONFIG.canvasWidth / 2;
+            const centerY = GAME_CONFIG.canvasHeight / 2;
+            
+            // 清空画布
+            ctx.clearRect(0, 0, GAME_CONFIG.canvasWidth, GAME_CONFIG.canvasHeight);
+            
+            // 绘制背景装饰
+            drawBackgroundDecoration(ctx);
+            
+            // 绘制头发（后层）
+            drawHairBack(ctx, centerX, centerY);
+            
+            // 绘制脖子
+            drawNeck(ctx, centerX, centerY);
+            
+            // 绘制身体/衣服
+            drawBody(ctx, centerX, centerY);
+            
+            // 绘制脸部
+            drawFace(ctx, centerX, centerY);
+            
+            // 绘制头发（前层和刘海）
+            drawHairFront(ctx, centerX, centerY);
+            
+            // 绘制耳朵
+            drawEars(ctx, centerX, centerY);
+            
+            // 绘制眉毛
+            drawEyebrows(ctx, centerX, centerY);
+            
+            // 绘制眼睛（基础）
+            drawEyes(ctx, centerX, centerY);
+            
+            // 绘制鼻子
+            drawNose(ctx, centerX, centerY);
+            
+            // 绘制嘴唇（基础）
+            drawLips(ctx, centerX, centerY);
+            
+            // 合并所有图层到主Canvas
+            compositeAllLayers();
+        }
+
+        /**
+         * 绘制背景装饰
+         */
+        function drawBackgroundDecoration(ctx) {
+            // 渐变背景
+            const gradient = ctx.createRadialGradient(250, 300, 50, 250, 300, 400);
+            gradient.addColorStop(0, '#FFF0F5');
+            gradient.addColorStop(1, '#FFE4EC');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 500, 600);
+            
+            // 装饰性星星
+            const stars = [
+                { x: 50, y: 80, size: 15 },
+                { x: 450, y: 100, size: 12 },
+                { x: 80, y: 500, size: 14 },
+                { x: 420, y: 480, size: 16 }
+            ];
+            
+            stars.forEach(star => {
+                ctx.save();
+                ctx.translate(star.x, star.y);
+                ctx.fillStyle = 'rgba(255, 182, 193, 0.5)';
+                drawStar(ctx, 0, 0, 5, star.size, star.size / 2);
+                ctx.restore();
+            });
+        }
+
+        /**
+         * 绘制星形
+         */
+        function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+            let rot = Math.PI / 2 * 3;
+            let x = cx;
+            let y = cy;
+            const step = Math.PI / spikes;
+            
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - outerRadius);
+            
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius;
+                y = cy + Math.sin(rot) * outerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+                
+                x = cx + Math.cos(rot) * innerRadius;
+                y = cy + Math.sin(rot) * innerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+            }
+            
+            ctx.lineTo(cx, cy - outerRadius);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        /**
+         * 绘制头发（后层）
+         */
+        function drawHairBack(ctx, cx, cy) {
+            ctx.save();
+            
+            // 头发后层（深棕色）
+            ctx.fillStyle = '#4A3728';
+            
+            // 后脑部分
+            ctx.beginPath();
+            ctx.ellipse(cx, cy - 50, 110, 130, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 长发部分
+            ctx.beginPath();
+            ctx.moveTo(cx - 100, cy + 50);
+            ctx.bezierCurveTo(
+                cx - 130, cy + 150,
+                cx - 120, cy + 250,
+                cx - 80, cy + 280
+            );
+            ctx.lineTo(cx - 50, cy + 280);
+            ctx.bezierCurveTo(
+                cx - 80, cy + 230,
+                cx - 90, cy + 130,
+                cx - 95, cy + 80
+            );
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.moveTo(cx + 100, cy + 50);
+            ctx.bezierCurveTo(
+                cx + 130, cy + 150,
+                cx + 120, cy + 250,
+                cx + 80, cy + 280
+            );
+            ctx.lineTo(cx + 50, cy + 280);
+            ctx.bezierCurveTo(
+                cx + 80, cy + 230,
+                cx + 90, cy + 130,
+                cx + 95, cy + 80
+            );
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
+        /**
+         * 绘制脖子
+         */
+        function drawNeck(ctx, cx, cy) {
+            ctx.save();
+            ctx.fillStyle = '#FFDAB9';
+            ctx.beginPath();
+            ctx.moveTo(cx - 30, cy + 100);
+            ctx.lineTo(cx - 35, cy + 150);
+            ctx.lineTo(cx + 35, cy + 150);
+            ctx.lineTo(cx + 30, cy + 100);
+            ctx.closePath();
+            ctx.fill();
+            
+            // 脖子阴影
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.beginPath();
+            ctx.moveTo(cx - 30, cy + 100);
+            ctx.lineTo(cx - 35, cy + 150);
+            ctx.lineTo(cx - 15, cy + 150);
+            ctx.lineTo(cx - 15, cy + 105);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
+        /**
+         * 绘制身体/衣服
+         */
+        function drawBody(ctx, cx, cy) {
+            ctx.save();
+            
+            // 衣服主体（可爱的粉色连衣裙）
+            const dressGradient = ctx.createLinearGradient(cx - 120, cy + 150, cx - 120, cy + 350);
+            dressGradient.addColorStop(0, '#FF69B4');
+            dressGradient.addColorStop(1, '#FF1493');
+            ctx.fillStyle = dressGradient;
+            
+            ctx.beginPath();
+            ctx.moveTo(cx - 35, cy + 150);
+            ctx.lineTo(cx - 80, cy + 170);
+            ctx.bezierCurveTo(
+                cx - 120, cy + 220,
+                cx - 140, cy + 320,
+                cx - 100, cy + 380
+            );
+            ctx.lineTo(cx + 100, cy + 380);
+            ctx.bezierCurveTo(
+                cx + 140, cy + 320,
+                cx + 120, cy + 220,
+                cx + 80, cy + 170
+            );
+            ctx.lineTo(cx + 35, cy + 150);
+            ctx.closePath();
+            ctx.fill();
+            
+            // 衣服装饰 - 领子
+            ctx.fillStyle = '#FFF0F5';
+            ctx.beginPath();
+            ctx.moveTo(cx - 35, cy + 150);
+            ctx.quadraticCurveTo(cx, cy + 170, cx + 35, cy + 150);
+            ctx.quadraticCurveTo(cx, cy + 180, cx - 35, cy + 150);
+            ctx.fill();
+            
+            // 衣服装饰 - 丝带
+            ctx.fillStyle = '#FFB6C1';
+            ctx.beginPath();
+            ctx.arc(cx, cy + 165, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 蝴蝶结
+            ctx.fillStyle = '#FF69B4';
+            ctx.beginPath();
+            ctx.ellipse(cx - 20, cy + 160, 15, 10, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(cx + 20, cy + 160, 15, 10, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 袖子
+            ctx.fillStyle = '#FF69B4';
+            ctx.beginPath();
+            ctx.moveTo(cx - 35, cy + 150);
+            ctx.lineTo(cx - 80, cy + 170);
+            ctx.lineTo(cx - 75, cy + 180);
+            ctx.bezierCurveTo(
+                cx - 50, cy + 170,
+                cx - 30, cy + 160,
+                cx - 30, cy + 150
+            );
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.moveTo(cx + 35, cy + 150);
+            ctx.lineTo(cx + 80, cy + 170);
+            ctx.lineTo(cx + 75, cy + 180);
+            ctx.bezierCurveTo(
+                cx + 50, cy + 170,
+                cx + 30, cy + 160,
+                cx + 30, cy + 150
+            );
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
+        /**
+         * 绘制脸部
+         */
+        function drawFace(ctx, cx, cy) {
+            ctx.save();
+            
+            // 脸部渐变
+            const faceGradient = ctx.createRadialGradient(cx, cy - 30, 20, cx, cy, 100);
+            faceGradient.addColorStop(0, '#FFDAB9');
+            faceGradient.addColorStop(1, '#FFCBA4');
+            ctx.fillStyle = faceGradient;
+            
+            // 椭圆形脸部
+            ctx.beginPath();
+            ctx.ellipse(cx, cy - 20, 90, 110, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 脸部阴影
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.beginPath();
+            ctx.ellipse(cx + 60, cy - 10, 25, 80, 0.2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 脸部高光
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.beginPath();
+            ctx.ellipse(cx - 40, cy - 60, 20, 30, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
+        /**
+         * 绘制头发（前层和刘海）
+         */
+        function drawHairFront(ctx, cx, cy) {
+            ctx.save();
+            ctx.fillStyle = '#4A3728';
+            
+            // 刘海
+            ctx.beginPath();
+            ctx.moveTo(cx - 90, cy - 120);
+            ctx.bezierCurveTo(
+                cx - 80, cy - 140,
+                cx - 40, cy - 150,
+                cx, cy - 145
+            );
+            ctx.bezierCurveTo(
+                cx + 40, cy - 150,
+                cx + 80, cy - 140,
+                cx + 90, cy - 120
+            );
+            ctx.bezierCurveTo(
+                cx + 70, cy - 80,
+                cx + 50, cy - 60,
+                cx + 30, cy - 70
+            );
+            ctx.bezierCurveTo(
+                cx + 10, cy - 90,
+                cx - 10, cy - 90,
+                cx - 30, cy - 70
+            );
+            ctx.bezierCurveTo(
+                cx - 50, cy - 60,
+                cx - 70, cy - 80,
+                cx - 90, cy - 120
+            );
+            ctx.fill();
+            
+            // 头发高光
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.beginPath();
+            ctx.ellipse(cx - 30, cy - 120, 30, 15, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
+        /**
+         * 绘制耳朵
+         */
+        function drawEars(ctx, cx, cy) {
+            ctx.save();
+            ctx.fillStyle = '#FFDAB9';
+            
+            // 左耳
+            ctx.beginPath();
+            ctx.ellipse(cx - 85, cy - 30, 15, 25, 0.2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 左耳内部
+            ctx.fillStyle = '#FFCBA4';
+            ctx.beginPath();
+            ctx.ellipse(cx - 82, cy - 28, 8, 15, 0.2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 右耳
+            ctx.fillStyle = '#FFDAB9';
+            ctx.beginPath();
+            ctx.ellipse(cx + 85, cy - 30, 15, 25, -0.2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 右耳内部
+            ctx.fillStyle = '#FFCBA4';
+            ctx.beginPath();
+            ctx.ellipse(cx + 82, cy - 28, 8, 15, -0.2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
+        /**
+         * 绘制眉毛
+         */
+        function drawEyebrows(ctx, cx, cy) {
+            ctx.save();
+            ctx.strokeStyle = '#3D2914';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            
+            // 左眉毛
+            ctx.beginPath();
+            ctx.moveTo(cx - 55, cy - 70);
+            ctx.quadraticCurveTo(cx - 35, cy - 80, cx - 15, cy - 70);
+            ctx.stroke();
+            
+            // 右眉毛
+            ctx.beginPath();
+            ctx.moveTo(cx + 15, cy - 70);
+            ctx.quadraticCurveTo(cx + 35, cy - 80, cx + 55, cy - 70);
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        /**
+         * 绘制眼睛
+         */
+        function drawEyes(ctx, cx, cy) {
+            const eyeY = cy - 40;
+            const leftEyeX = cx - 40;
+            const rightEyeX = cx + 40;
+            
+            ctx.save();
+            
+            // 绘制双眼皮
+            ctx.strokeStyle = '#654321';
+            ctx.lineWidth = 1.5;
+            ctx.lineCap = 'round';
+            
+            // 左双眼皮
+            ctx.beginPath();
+            ctx.arc(leftEyeX, eyeY - 5, 22, 0.2, Math.PI - 0.2);
+            ctx.stroke();
+            
+            // 右双眼皮
+            ctx.beginPath();
+            ctx.arc(rightEyeX, eyeY - 5, 22, 0.2, Math.PI - 0.2);
+            ctx.stroke();
+            
+            // 眼白
+            ctx.fillStyle = '#FFFFFF';
+            
+            // 左眼白
+            ctx.beginPath();
+            ctx.ellipse(leftEyeX, eyeY, 25, 18, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 右眼白
+            ctx.beginPath();
+            ctx.ellipse(rightEyeX, eyeY, 25, 18, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 眼线
+            ctx.strokeStyle = '#1a1a1a';
+            ctx.lineWidth = 2;
+            
+            // 左眼线
+            ctx.beginPath();
+            ctx.ellipse(leftEyeX, eyeY, 25, 18, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // 右眼线
+            ctx.beginPath();
+            ctx.ellipse(rightEyeX, eyeY, 25, 18, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // 瞳孔（深棕色）
+            ctx.fillStyle = '#4A3728';
+            
+            // 左瞳孔
+            ctx.beginPath();
+            ctx.arc(leftEyeX, eyeY, 12, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 右瞳孔
+            ctx.beginPath();
+            ctx.arc(rightEyeX, eyeY, 12, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 瞳孔高光
+            ctx.fillStyle = '#000000';
+            
+            ctx.beginPath();
+            ctx.arc(leftEyeX, eyeY, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(rightEyeX, eyeY, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 眼睛高光
+            ctx.fillStyle = '#FFFFFF';
+            
+            // 左眼高光
+            ctx.beginPath();
+            ctx.arc(leftEyeX - 4, eyeY - 4, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(leftEyeX + 5, eyeY + 3, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 右眼高光
+            ctx.beginPath();
+            ctx.arc(rightEyeX - 4, eyeY - 4, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(rightEyeX + 5, eyeY + 3, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 睫毛
+            ctx.strokeStyle = '#1a1a1a';
+            ctx.lineWidth = 1.5;
+            
+            // 上睫毛 - 左眼
+            for (let i = 0; i < 5; i++) {
+                const angle = Math.PI * 0.2 + i * Math.PI * 0.15;
+                const startX = leftEyeX + Math.cos(angle) * 23;
+                const startY = eyeY - Math.sin(angle) * 16;
+                const endX = startX + Math.cos(angle - 0.3) * 8;
+                const endY = startY - Math.sin(angle - 0.3) * 6;
+                
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.quadraticCurveTo(
+                    (startX + endX) / 2 - 2,
+                    (startY + endY) / 2 - 3,
+                    endX, endY
+                );
+                ctx.stroke();
+            }
+            
+            // 上睫毛 - 右眼
+            for (let i = 0; i < 5; i++) {
+                const angle = Math.PI * 0.8 - i * Math.PI * 0.15;
+                const startX = rightEyeX - Math.cos(angle) * 23;
+                const startY = eyeY - Math.sin(angle) * 16;
+                const endX = startX - Math.cos(angle - 0.3) * 8;
+                const endY = startY - Math.sin(angle - 0.3) * 6;
+                
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.quadraticCurveTo(
+                    (startX + endX) / 2 + 2,
+                    (startY + endY) / 2 - 3,
+                    endX, endY
+                );
+                ctx.stroke();
+            }
+            
+            ctx.restore();
+        }
+
+        /**
+         * 绘制鼻子
+         */
+        function drawNose(ctx, cx, cy) {
+            ctx.save();
+            ctx.strokeStyle = 'rgba(139, 69, 19, 0.3)';
+            ctx.lineWidth = 1.5;
+            ctx.lineCap = 'round';
+            
+            // 鼻梁
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - 10);
+            ctx.quadraticCurveTo(cx - 2, cy + 10, cx - 5, cy + 15);
+            ctx.stroke();
+            
+            // 鼻尖阴影
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.beginPath();
+            ctx.ellipse(cx, cy + 20, 10, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 高光
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.beginPath();
+            ctx.ellipse(cx - 3, cy + 8, 4, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
+        /**
+         * 绘制嘴唇（基础）
+         */
+        function drawLips(ctx, cx, cy) {
+            ctx.save();
+            const lipY = cy + 50;
+            
+            // 唇线
+            ctx.strokeStyle = '#CD5C5C';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            // 上嘴唇
+            ctx.fillStyle = '#FFB6C1';
+            ctx.beginPath();
+            ctx.moveTo(cx - 40, lipY);
+            ctx.quadraticCurveTo(cx - 25, lipY - 15, cx - 10, lipY - 12);
+            ctx.quadraticCurveTo(cx, lipY - 8, cx + 10, lipY - 12);
+            ctx.quadraticCurveTo(cx + 25, lipY - 15, cx + 40, lipY);
+            ctx.quadraticCurveTo(cx + 20, lipY + 5, cx, lipY + 2);
+            ctx.quadraticCurveTo(cx - 20, lipY + 5, cx - 40, lipY);
+            ctx.fill();
+            ctx.stroke();
+            
+            // 下嘴唇
+            ctx.fillStyle = '#FFA0A0';
+            ctx.beginPath();
+            ctx.moveTo(cx - 40, lipY);
+            ctx.quadraticCurveTo(cx - 25, lipY + 25, cx, lipY + 30);
+            ctx.quadraticCurveTo(cx + 25, lipY + 25, cx + 40, lipY);
+            ctx.quadraticCurveTo(cx + 20, lipY + 5, cx, lipY + 2);
+            ctx.quadraticCurveTo(cx - 20, lipY + 5, cx - 40, lipY);
+            ctx.fill();
+            
+            // 唇线（下嘴唇）
+            ctx.beginPath();
+            ctx.moveTo(cx - 40, lipY);
+            ctx.quadraticCurveTo(cx - 25, lipY + 25, cx, lipY + 30);
+            ctx.quadraticCurveTo(cx + 25, lipY + 25, cx + 40, lipY);
+            ctx.stroke();
+            
+            // 嘴唇高光
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.beginPath();
+            ctx.ellipse(cx - 15, lipY - 5, 12, 5, -0.2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.ellipse(cx + 15, lipY - 5, 12, 5, 0.2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 唇珠
+            ctx.fillStyle = 'rgba(255, 150, 150, 0.8)';
+            ctx.beginPath();
+            ctx.ellipse(cx, lipY - 5, 8, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
+        /**
+         * 合并所有图层到主Canvas
+         * 按正确的图层顺序合成
+         */
+        function compositeAllLayers() {
+            const mainCtx = canvasLayers.mainCtx;
+            const { width, height } = GAME_CONFIG;
+            
+            // 清空主Canvas
+            mainCtx.clearRect(0, 0, width, height);
+            
+            // 1. 基础角色图层
+            mainCtx.drawImage(canvasLayers.base, 0, 0);
+            
+            // 2. 粉底图层（使用颜色混合模式）
+            mainCtx.globalCompositeOperation = 'source-over';
+            mainCtx.drawImage(canvasLayers.foundation, 0, 0);
+            
+            // 3. 腮红图层（使用正片叠底混合）
+            mainCtx.globalCompositeOperation = 'source-over';
+            mainCtx.drawImage(canvasLayers.blush, 0, 0);
+            
+            // 4. 眼影图层
+            mainCtx.globalCompositeOperation = 'source-over';
+            mainCtx.drawImage(canvasLayers.eyeshadow, 0, 0);
+            
+            // 5. 口红图层
+            mainCtx.globalCompositeOperation = 'source-over';
+            mainCtx.drawImage(canvasLayers.lipstick, 0, 0);
+            
+            // 重置混合模式
+            mainCtx.globalCompositeOperation = 'source-over';
+        }
+
+        // ==================== 化妆品绘制函数 ====================
+        
+        /**
+         * 应用粉底
+         * 改变整体肤色
+         */
+        function applyFoundation(color) {
+            const ctx = canvasLayers.foundationCtx;
+            
+            // 清空粉底图层（saveCurrentState 已在 handleStart 中调用）
+            ctx.clearRect(0, 0, GAME_CONFIG.canvasWidth, GAME_CONFIG.canvasHeight);
+            
+            // 创建脸部遮罩
+            const maskCanvas = document.createElement('canvas');
+            maskCanvas.width = GAME_CONFIG.canvasWidth;
+            maskCanvas.height = GAME_CONFIG.canvasHeight;
+            const maskCtx = maskCanvas.getContext('2d');
+            
+            // 绘制脸部区域作为遮罩
+            const cx = GAME_CONFIG.canvasWidth / 2;
+            const cy = GAME_CONFIG.canvasHeight / 2;
+            
+            maskCtx.fillStyle = 'white';
+            maskCtx.beginPath();
+            maskCtx.ellipse(cx, cy - 20, 90, 110, 0, 0, Math.PI * 2);
+            maskCtx.fill();
+            
+            // 也包含耳朵
+            maskCtx.beginPath();
+            maskCtx.ellipse(cx - 85, cy - 30, 15, 25, 0.2, 0, Math.PI * 2);
+            maskCtx.fill();
+            maskCtx.beginPath();
+            maskCtx.ellipse(cx + 85, cy - 30, 15, 25, -0.2, 0, Math.PI * 2);
+            maskCtx.fill();
+            
+            // 脖子
+            maskCtx.beginPath();
+            maskCtx.moveTo(cx - 30, cy + 100);
+            maskCtx.lineTo(cx - 35, cy + 150);
+            maskCtx.lineTo(cx + 35, cy + 150);
+            maskCtx.lineTo(cx + 30, cy + 100);
+            maskCtx.closePath();
+            maskCtx.fill();
+            
+            // 在粉底图层上绘制颜色
+            ctx.save();
+            
+            // 先绘制遮罩
+            ctx.drawImage(maskCanvas, 0, 0);
+            
+            // 使用源入模式，只在遮罩区域绘制
+            ctx.globalCompositeOperation = 'source-in';
+            ctx.fillStyle = color.value;
+            ctx.globalAlpha = color.opacity;
+            ctx.fillRect(0, 0, GAME_CONFIG.canvasWidth, GAME_CONFIG.canvasHeight);
+            
+            // 再使用正片叠底混合
+            ctx.globalCompositeOperation = 'multiply';
+            ctx.fillStyle = color.value;
+            ctx.globalAlpha = color.opacity * 0.5;
+            ctx.fillRect(0, 0, GAME_CONFIG.canvasWidth, GAME_CONFIG.canvasHeight);
+            
+            ctx.restore();
+            
+            // 更新妆容数据
+            gameState.makeupData.foundation = {
+                type: 'foundation',
+                color: color
+            };
+            
+            // 重新合成图层
+            compositeAllLayers();
+        }
+
+        /**
+         * 在指定区域绘制腮红
+         */
+        function drawBlush(x, y, color) {
+            const ctx = canvasLayers.blushCtx;
+            
+            ctx.save();
+            
+            // 创建径向渐变模拟自然的腮红效果
+            const gradient = ctx.createRadialGradient(x, y, 0, x, y, 35);
+            gradient.addColorStop(0, color.value);
+            gradient.addColorStop(0.5, color.value + '80');
+            gradient.addColorStop(1, color.value + '00');
+            
+            ctx.fillStyle = gradient;
+            ctx.globalAlpha = color.opacity;
+            
+            // 绘制腮红（椭圆形状）
+            ctx.beginPath();
+            ctx.ellipse(x, y, 35, 25, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 额外的柔和层
+            ctx.globalAlpha = color.opacity * 0.5;
+            ctx.beginPath();
+            ctx.ellipse(x, y + 5, 40, 30, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
+        /**
+         * 在嘴唇区域绘制口红
+         */
+        function drawLipstick(x, y, color) {
+            const ctx = canvasLayers.lipstickCtx;
+            const cx = GAME_CONFIG.canvasWidth / 2;
+            const lipY = GAME_CONFIG.canvasHeight / 2 + 50;
+            
+            ctx.save();
+            
+            // 创建嘴唇路径
+            ctx.beginPath();
+            
+            // 上嘴唇
+            ctx.moveTo(cx - 40, lipY);
+            ctx.quadraticCurveTo(cx - 25, lipY - 15, cx - 10, lipY - 12);
+            ctx.quadraticCurveTo(cx, lipY - 8, cx + 10, lipY - 12);
+            ctx.quadraticCurveTo(cx + 25, lipY - 15, cx + 40, lipY);
+            ctx.quadraticCurveTo(cx + 20, lipY + 5, cx, lipY + 2);
+            ctx.quadraticCurveTo(cx - 20, lipY + 5, cx - 40, lipY);
+            
+            // 下嘴唇
+            ctx.moveTo(cx - 40, lipY);
+            ctx.quadraticCurveTo(cx - 25, lipY + 25, cx, lipY + 30);
+            ctx.quadraticCurveTo(cx + 25, lipY + 25, cx + 40, lipY);
+            ctx.quadraticCurveTo(cx + 20, lipY + 5, cx, lipY + 2);
+            ctx.quadraticCurveTo(cx - 20, lipY + 5, cx - 40, lipY);
+            
+            ctx.closePath();
+            
+            // 应用口红颜色
+            ctx.fillStyle = color.value;
+            ctx.globalAlpha = color.opacity;
+            ctx.fill();
+            
+            // 添加光泽效果
+            const lipGloss = ctx.createRadialGradient(
+                cx, lipY + 10, 5,
+                cx, lipY + 10, 30
+            );
+            lipGloss.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+            lipGloss.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            
+            ctx.fillStyle = lipGloss;
+            ctx.globalAlpha = 1;
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
+        /**
+         * 在眼睛区域绘制眼影
+         */
+        function drawEyeshadow(eyeSide, color) {
+            const ctx = canvasLayers.eyeshadowCtx;
+            const cx = GAME_CONFIG.canvasWidth / 2;
+            const eyeY = GAME_CONFIG.canvasHeight / 2 - 40;
+            
+            ctx.save();
+            ctx.fillStyle = color.value;
+            ctx.globalAlpha = color.opacity;
+            
+            // 根据选择绘制左眼、右眼或双眼
+            const eyesToDraw = [];
+            
+            if (eyeSide === 'both' || eyeSide === 'left') {
+                eyesToDraw.push(cx - 40);
+            }
+            if (eyeSide === 'both' || eyeSide === 'right') {
+                eyesToDraw.push(cx + 40);
+            }
+            
+            eyesToDraw.forEach(eyeX => {
+                // 创建眼影渐变
+                const gradient = ctx.createRadialGradient(
+                    eyeX, eyeY - 10, 5,
+                    eyeX, eyeY, 30
+                );
+                gradient.addColorStop(0, color.value);
+                gradient.addColorStop(0.7, color.value + '80');
+                gradient.addColorStop(1, color.value + '00');
+                
+                ctx.fillStyle = gradient;
+                ctx.globalAlpha = color.opacity;
+                
+                // 绘制眼影区域（眼睑上方的月牙形）
+                ctx.beginPath();
+                ctx.ellipse(eyeX, eyeY - 5, 28, 20, 0, Math.PI, Math.PI * 2);
+                ctx.fill();
+                
+                // 额外的柔和层
+                ctx.globalAlpha = color.opacity * 0.6;
+                ctx.beginPath();
+                ctx.ellipse(eyeX, eyeY - 8, 25, 15, 0, Math.PI + 0.2, Math.PI * 2 - 0.2);
+                ctx.fill();
+            });
+            
+            ctx.restore();
+        }
+
+        // ==================== 区域检测函数 ====================
+        
+        /**
+         * 检测坐标点是否在指定区域内
+         */
+        function isPointInRegion(x, y, region) {
+            return x >= region.x && 
+                   x <= region.x + region.width &&
+                   y >= region.y && 
+                   y <= region.y + region.height;
+        }
+
+        /**
+         * 获取指定坐标所在的面部区域
+         */
+        function getRegionAtPoint(x, y) {
+            // 检查各个区域
+            for (const [name, region] of Object.entries(FACE_REGIONS)) {
+                if (isPointInRegion(x, y, region)) {
+                    return { name, ...region };
+                }
+            }
+            return null;
+        }
+
+        /**
+         * 检查当前选中的化妆品类型是否适合指定区域
+         */
+        function isCosmeticCompatible(cosmeticType, regionType) {
+            // 粉底适用于所有脸部相关区域（眼睛、嘴唇、脸颊等都属于脸部）
+            if (cosmeticType === 'foundation') {
+                return true;
+            }
+            // 其他化妆品类型需要精确匹配
+            return cosmeticType === regionType;
+        }
+
+        // ==================== 事件处理函数 ====================
+        
+        /**
+         * 获取鼠标/触摸在Canvas上的坐标
+         */
+        function getCanvasCoordinates(e) {
+            const canvas = canvasLayers.main;
+            const rect = canvas.getBoundingClientRect();
+            
+            // 处理触摸事件
+            let clientX, clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            
+            // 计算缩放比例
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        /**
+         * 处理鼠标/触摸按下事件
+         */
+        function handleStart(e) {
+            e.preventDefault();
+            
+            // 检查是否选择了化妆品
+            if (!gameState.currentType || !gameState.currentColor) {
+                updateTip('请先从右侧选择化妆品');
+                return;
+            }
+            
+            const coords = getCanvasCoordinates(e);
+            const region = getRegionAtPoint(coords.x, coords.y);
+            
+            // 检查区域是否匹配
+            if (!region || !isCosmeticCompatible(gameState.currentType, region.type)) {
+                updateTip(`请在${getRegionName(gameState.currentType)}区域涂抹`);
+                return;
+            }
+            
+            // 开始涂抹
+            gameState.isDrawing = true;
+            gameState.lastPoint = coords;
+            
+            // 保存当前状态（用于撤销）
+            saveCurrentState();
+            
+            // 应用化妆效果
+            applyMakeup(region, coords);
+        }
+
+        /**
+         * 处理鼠标/触摸移动事件
+         */
+        function handleMove(e) {
+            e.preventDefault();
+            
+            if (!gameState.isDrawing) {
+                return;
+            }
+            
+            const coords = getCanvasCoordinates(e);
+            const region = getRegionAtPoint(coords.x, coords.y);
+            
+            // 只有在对应区域内才继续涂抹
+            if (region && isCosmeticCompatible(gameState.currentType, region.type)) {
+                applyMakeup(region, coords);
+                
+                // 如果有上一个点，绘制平滑的连接线
+                if (gameState.lastPoint) {
+                    interpolatePoints(gameState.lastPoint, coords, region);
+                }
+                
+                gameState.lastPoint = coords;
+            }
+        }
+
+        /**
+         * 处理鼠标/触摸释放事件
+         */
+        function handleEnd(e) {
+            e.preventDefault();
+            
+            if (gameState.isDrawing) {
+                gameState.isDrawing = false;
+                gameState.lastPoint = null;
+                updateTip('化妆完成！可以继续涂抹或选择其他化妆品');
+            }
+        }
+
+        /**
+         * 插值绘制两点之间的平滑过渡
+         */
+        function interpolatePoints(from, to, region) {
+            const distance = Math.sqrt(
+                Math.pow(to.x - from.x, 2) + 
+                Math.pow(to.y - from.y, 2)
+            );
+            
+            const steps = Math.max(1, Math.floor(distance / 5));
+            
+            for (let i = 1; i <= steps; i++) {
+                const t = i / steps;
+                const x = from.x + (to.x - from.x) * t;
+                const y = from.y + (to.y - from.y) * t;
+                
+                // 简化区域信息用于插值绘制
+                const simpleRegion = { name: region.name, type: region.type };
+                applyMakeup(simpleRegion, { x, y });
+            }
+        }
+
+        /**
+         * 应用化妆效果
+         */
+        function applyMakeup(region, coords) {
+            const type = gameState.currentType;
+            const color = gameState.currentColor;
+            
+            switch (type) {
+                case 'foundation':
+                    // 粉底点击即应用全脸
+                    applyFoundation(color);
+                    updateTip(`已应用${color.name}粉底`);
+                    break;
+                    
+                case 'blush':
+                    // 根据区域应用腮红
+                    if (region.name === 'leftCheek') {
+                        drawBlush(FACE_REGIONS.leftCheek.x + 40, 
+                                  FACE_REGIONS.leftCheek.y + 30, color);
+                        // 对称地也画右脸颊
+                        drawBlush(FACE_REGIONS.rightCheek.x + 40, 
+                                  FACE_REGIONS.rightCheek.y + 30, color);
+                    } else if (region.name === 'rightCheek') {
+                        drawBlush(FACE_REGIONS.rightCheek.x + 40, 
+                                  FACE_REGIONS.rightCheek.y + 30, color);
+                        // 对称地也画左脸颊
+                        drawBlush(FACE_REGIONS.leftCheek.x + 40, 
+                                  FACE_REGIONS.leftCheek.y + 30, color);
+                    }
+                    updateTip(`已涂抹${color.name}腮红`);
+                    compositeAllLayers();
+                    break;
+                    
+                case 'lipstick':
+                    // 在嘴唇区域应用口红
+                    drawLipstick(coords.x, coords.y, color);
+                    updateTip(`已涂抹${color.name}口红`);
+                    compositeAllLayers();
+                    break;
+                    
+                case 'eyeshadow':
+                    // 根据眼影模式应用
+                    const eyeMode = gameState.eyeMode;
+                    let targetEye = eyeMode;
+                    
+                    // 如果点击了特定眼睛，优先使用点击的眼睛
+                    if (region.name === 'leftEye') {
+                        targetEye = 'left';
+                    } else if (region.name === 'rightEye') {
+                        targetEye = 'right';
+                    }
+                    
+                    drawEyeshadow(targetEye, color);
+                    updateTip(`已涂抹${color.name}眼影`);
+                    compositeAllLayers();
+                    break;
+            }
+        }
+
+        /**
+         * 获取区域的中文名称
+         */
+        function getRegionName(type) {
+            const names = {
+                foundation: '脸部',
+                blush: '脸颊',
+                lipstick: '嘴唇',
+                eyeshadow: '眼睛'
+            };
+            return names[type] || '对应';
+        }
+
+        // ==================== UI交互函数 ====================
+        
+        /**
+         * 更新提示文本
+         */
+        function updateTip(message) {
+            const tipElement = document.getElementById('canvasTip');
+            if (tipElement) {
+                tipElement.textContent = message;
+            }
+        }
+
+        /**
+         * 更新当前选中状态显示
+         */
+        function updateSelectionDisplay() {
+            const displayElement = document.getElementById('currentSelection');
+            if (!displayElement) return;
+            
+            if (gameState.currentType && gameState.currentColor) {
+                const config = COSMETICS_CONFIG[gameState.currentType];
+                displayElement.innerHTML = 
+                    `当前：${config.icon} ${config.name} - <span style="color:${gameState.currentColor.value};font-weight:bold;">${gameState.currentColor.name}</span>`;
+            } else {
+                displayElement.textContent = '当前：未选择任何化妆品';
+            }
+        }
+
+        /**
+         * 动态生成化妆品按钮
+         */
+        function generateCosmeticButtons() {
+            for (const [type, config] of Object.entries(COSMETICS_CONFIG)) {
+                const gridElement = document.getElementById(`${type}Grid`);
+                if (!gridElement) continue;
+                
+                gridElement.innerHTML = '';
+                
+                config.colors.forEach((color, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'cosmetic-btn';
+                    btn.dataset.type = type;
+                    btn.dataset.index = index;
+                    btn.style.backgroundColor = color.value;
+                    btn.title = color.name;
+                    
+                    // 添加图标
+                    const iconSpan = document.createElement('span');
+                    iconSpan.className = 'icon';
+                    iconSpan.textContent = config.icon;
+                    btn.appendChild(iconSpan);
+                    
+                    // 点击事件
+                    btn.addEventListener('click', () => {
+                        selectCosmetic(type, index);
+                    });
+                    
+                    gridElement.appendChild(btn);
+                });
+            }
+        }
+
+        /**
+         * 选择化妆品
+         */
+        function selectCosmetic(type, index) {
+            // 更新游戏状态
+            gameState.currentType = type;
+            gameState.currentColor = COSMETICS_CONFIG[type].colors[index];
+            
+            // 更新UI选中状态
+            updateSelectedUI(type, index);
+            
+            // 更新显示
+            updateSelectionDisplay();
+            updateTip(`已选择${COSMETICS_CONFIG[type].name} - ${gameState.currentColor.name}，请在角色对应区域涂抹`);
+        }
+
+        /**
+         * 更新选中状态的UI
+         */
+        function updateSelectedUI(type, selectedIndex) {
+            // 清除所有选中状态
+            document.querySelectorAll('.cosmetic-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            // 设置当前选中
+            const buttons = document.querySelectorAll(`.cosmetic-btn[data-type="${type}"]`);
+            if (buttons[selectedIndex]) {
+                buttons[selectedIndex].classList.add('selected');
+            }
+        }
+
+        /**
+         * 设置眼影涂抹模式
+         */
+        function setEyeMode(mode) {
+            gameState.eyeMode = mode;
+            
+            // 更新UI
+            document.querySelectorAll('.eye-btn').forEach(btn => {
+                btn.classList.remove('selected');
+                if (btn.dataset.eye === mode) {
+                    btn.classList.add('selected');
+                }
+            });
+            
+            updateTip(`眼影模式：${mode === 'both' ? '双眼' : mode === 'left' ? '左眼' : '右眼'}`);
+        }
+
+        // ==================== 历史记录与撤销函数 ====================
+        
+        /**
+         * 保存当前状态到历史记录
+         */
+        function saveCurrentState() {
+            // 创建当前各图层的快照
+            const state = {
+                foundation: captureCanvasState(canvasLayers.foundation),
+                blush: captureCanvasState(canvasLayers.blush),
+                lipstick: captureCanvasState(canvasLayers.lipstick),
+                eyeshadow: captureCanvasState(canvasLayers.eyeshadow),
+                makeupData: JSON.parse(JSON.stringify(gameState.makeupData))
+            };
+            
+            // 添加到历史记录
+            gameState.history.push(state);
+            
+            // 限制历史记录数量
+            if (gameState.history.length > GAME_CONFIG.maxUndoSteps) {
+                gameState.history.shift();
+            }
+        }
+
+        /**
+         * 捕获Canvas的当前状态
+         */
+        function captureCanvasState(canvas) {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(canvas, 0, 0);
+            return tempCanvas;
+        }
+
+        /**
+         * 执行撤销操作
+         */
+        function undo() {
+            if (gameState.history.length === 0) {
+                updateTip('没有可以撤销的操作了');
+                return;
+            }
+            
+            // 从历史记录中恢复上一个状态
+            const previousState = gameState.history.pop();
+            
+            // 恢复各图层
+            restoreCanvasState(canvasLayers.foundation, previousState.foundation);
+            restoreCanvasState(canvasLayers.blush, previousState.blush);
+            restoreCanvasState(canvasLayers.lipstick, previousState.lipstick);
+            restoreCanvasState(canvasLayers.eyeshadow, previousState.eyeshadow);
+            
+            // 恢复妆容数据
+            gameState.makeupData = previousState.makeupData;
+            
+            // 重新合成图层
+            compositeAllLayers();
+            
+            updateTip('已撤销上一步操作');
+        }
+
+        /**
+         * 恢复Canvas状态
+         */
+        function restoreCanvasState(targetCanvas, sourceCanvas) {
+            const ctx = targetCanvas.getContext('2d');
+            ctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+            ctx.drawImage(sourceCanvas, 0, 0);
+        }
+
+        /**
+         * 重置所有化妆效果
+         */
+        function resetMakeup() {
+            // 先保存当前状态（允许撤销重置）
+            saveCurrentState();
+            
+            // 清空所有化妆品图层
+            canvasLayers.foundationCtx.clearRect(0, 0, GAME_CONFIG.canvasWidth, GAME_CONFIG.canvasHeight);
+            canvasLayers.blushCtx.clearRect(0, 0, GAME_CONFIG.canvasWidth, GAME_CONFIG.canvasHeight);
+            canvasLayers.lipstickCtx.clearRect(0, 0, GAME_CONFIG.canvasWidth, GAME_CONFIG.canvasHeight);
+            canvasLayers.eyeshadowCtx.clearRect(0, 0, GAME_CONFIG.canvasWidth, GAME_CONFIG.canvasHeight);
+            
+            // 重置妆容数据
+            gameState.makeupData = {
+                lipstick: null,
+                blush: null,
+                eyeshadow: null,
+                foundation: null
+            };
+            
+            // 重新合成图层
+            compositeAllLayers();
+            
+            updateTip('已重置所有化妆效果');
+        }
+
+        // ==================== 保存功能 ====================
+        
+        /**
+         * 保存当前Canvas为PNG图片
+         */
+        function saveImage() {
+            // 创建临时Canvas用于导出
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = GAME_CONFIG.canvasWidth;
+            exportCanvas.height = GAME_CONFIG.canvasHeight;
+            const exportCtx = exportCanvas.getContext('2d');
+            
+            // 绘制所有图层
+            exportCtx.drawImage(canvasLayers.base, 0, 0);
+            exportCtx.drawImage(canvasLayers.foundation, 0, 0);
+            exportCtx.drawImage(canvasLayers.blush, 0, 0);
+            exportCtx.drawImage(canvasLayers.eyeshadow, 0, 0);
+            exportCtx.drawImage(canvasLayers.lipstick, 0, 0);
+            
+            // 添加水印
+            exportCtx.fillStyle = 'rgba(255, 105, 180, 0.7)';
+            exportCtx.font = '14px Microsoft YaHei';
+            exportCtx.fillText('💄 美妆达人 - 我的作品', 10, GAME_CONFIG.canvasHeight - 10);
+            
+            try {
+                // 导出为PNG
+                const dataURL = exportCanvas.toDataURL('image/png');
+                
+                // 创建下载链接
+                const link = document.createElement('a');
+                link.download = `美妆达人_${new Date().toLocaleDateString().replace(/\//g, '-')}.png`;
+                link.href = dataURL;
+                
+                // 触发下载
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                updateTip('图片已保存到本地！');
+            } catch (error) {
+                console.error('保存图片失败:', error);
+                updateTip('保存失败，请重试');
+            }
+        }
+
+        // ==================== 事件绑定 ====================
+        
+        /**
+         * 绑定所有事件监听器
+         */
+        function bindEventListeners() {
+            const canvas = canvasLayers.main;
+            
+            // 鼠标事件
+            canvas.addEventListener('mousedown', handleStart);
+            canvas.addEventListener('mousemove', handleMove);
+            canvas.addEventListener('mouseup', handleEnd);
+            canvas.addEventListener('mouseleave', handleEnd);
+            
+            // 触摸事件
+            canvas.addEventListener('touchstart', handleStart, { passive: false });
+            canvas.addEventListener('touchmove', handleMove, { passive: false });
+            canvas.addEventListener('touchend', handleEnd, { passive: false });
+            canvas.addEventListener('touchcancel', handleEnd, { passive: false });
+            
+            // 底部按钮事件
+            const undoBtn = document.getElementById('undoBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            
+            if (undoBtn) {
+                undoBtn.addEventListener('click', undo);
+            }
+            
+            if (resetBtn) {
+                resetBtn.addEventListener('click', resetMakeup);
+            }
+            
+            if (saveBtn) {
+                saveBtn.addEventListener('click', saveImage);
+            }
+            
+            // 眼影模式按钮
+            document.querySelectorAll('.eye-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    setEyeMode(btn.dataset.eye);
+                });
+            });
+            
+            // 键盘快捷键
+            document.addEventListener('keydown', (e) => {
+                // Ctrl+Z 撤销
+                if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                    e.preventDefault();
+                    undo();
+                }
+            });
+        }
+
+        // ==================== 初始化 ====================
+        
+        /**
+         * 游戏初始化
+         */
+        function initGame() {
+            // 初始化Canvas图层
+            initCanvasLayers();
+            
+            // 生成化妆品按钮
+            generateCosmeticButtons();
+            
+            // 绑定事件监听器
+            bindEventListeners();
+            
+            // 隐藏加载遮罩
+            setTimeout(() => {
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                if (loadingOverlay) {
+                    loadingOverlay.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingOverlay.style.display = 'none';
+                    }, 500);
+                }
+            }, 800);
+            
+            // 初始提示
+            updateTip('👆 请从右侧选择化妆品，然后在角色对应区域点击或拖拽涂抹');
+            
+            console.log('🎮 美妆达人游戏初始化完成！');
+        }
+
+        // 等待DOM加载完成后初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initGame);
+        } else {
+            initGame();
+        }
+    </script>
+</body>
+</html>
