@@ -1389,10 +1389,7 @@
         function applyFoundation(color) {
             const ctx = canvasLayers.foundationCtx;
             
-            // 保存当前状态到历史记录
-            saveCurrentState();
-            
-            // 清空粉底图层
+            // 清空粉底图层（saveCurrentState 已在 handleStart 中调用）
             ctx.clearRect(0, 0, GAME_CONFIG.canvasWidth, GAME_CONFIG.canvasHeight);
             
             // 创建脸部遮罩
@@ -1617,8 +1614,8 @@
          * 检查当前选中的化妆品类型是否适合指定区域
          */
         function isCosmeticCompatible(cosmeticType, regionType) {
-            // 粉底适用于脸部区域
-            if (cosmeticType === 'foundation' && regionType === 'foundation') {
+            // 粉底适用于所有脸部相关区域（眼睛、嘴唇、脸颊等都属于脸部）
+            if (cosmeticType === 'foundation') {
                 return true;
             }
             // 其他化妆品类型需要精确匹配
